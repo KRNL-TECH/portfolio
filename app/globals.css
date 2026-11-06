@@ -11,4 +11,7 @@ body {
   background: #0f172a;
   color: #fff;
 }
-html { scroll-behavior: smooth; }
+
+html {
+  scroll-behavior: smooth;
+}
