@@ -1,5 +1,5 @@
 "use client"; import { useState, type FormEvent } from "react";
-const PHONE = "201000000000"; const EMAIL = "hello@example.com";
+const PHONE = "01284755700"; const EMAIL = "krnl.tech@outlook.com";
 export default function Contact() { const [name, setName] = useState(""); const [msg, setMsg] = useState("");
 const send = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const text = encodeURIComponent("أنا " + name + "\n" + msg); window.open("https://wa.me/" + PHONE + "?text=" + text, "_blank"); };
 return ( <section id="contact" className="px-6 py-20 max-w-2xl mx-auto"> <h2 className="text-3xl font-bold mb-6 text-accent">تواصل معانا</h2>
