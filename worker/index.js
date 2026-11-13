@@ -47,8 +47,8 @@ async function isAdmin(request, env) {
   return safeEqual(sig, await hmac(env.ADMIN_PASSWORD, "session:" + exp));
 }
 
-async function loadProjects(env) {
-  const raw = await env.DATA.get("projects");
+async function loadList(env, name) {
+  const raw = await env.DATA.get(name);
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -65,6 +65,30 @@ function cleanLink(v) {
   }
 }
 
+// المجموعات اللي الأدمن بيديرها: projects (الأعمال) و team (من نحن)
+const COLLECTIONS = {
+  projects: {
+    imageField: "image",
+    addToStart: true,
+    build(form) {
+      const title = cleanText(form.get("title"), 80);
+      const desc = cleanText(form.get("desc"), 300);
+      if (!title || !desc) return { error: "الاسم والوصف مطلوبين" };
+      return { item: { title, desc, link: cleanLink(form.get("link")) } };
+    },
+  },
+  team: {
+    imageField: "photo",
+    addToStart: false,
+    build(form) {
+      const name = cleanText(form.get("name"), 60);
+      const role = cleanText(form.get("role"), 80);
+      if (!name || !role) return { error: "الاسم والتخصص مطلوبين" };
+      return { item: { name, role } };
+    },
+  },
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -80,8 +104,9 @@ export default {
     }
 
     // ---------- عام ----------
-    if (pathname === "/api/projects" && method === "GET") {
-      return json({ projects: await loadProjects(env) });
+    const listMatch = pathname.match(/^\/api\/(projects|team)$/);
+    if (listMatch && method === "GET") {
+      return json({ [listMatch[1]]: await loadList(env, listMatch[1]) });
     }
 
     const imgMatch = pathname.match(/^\/api\/img\/([a-f0-9-]{36})$/);
@@ -124,13 +149,13 @@ export default {
 
     if (pathname === "/api/me" && method === "GET") return json({ ok: true });
 
-    if (pathname === "/api/projects" && method === "POST") {
+    if (listMatch && method === "POST") {
+      const name = listMatch[1];
+      const col = COLLECTIONS[name];
       let form;
       try { form = await request.formData(); } catch { return json({ error: "بيانات غير صالحة" }, 400); }
-      const title = cleanText(form.get("title"), 80);
-      const desc = cleanText(form.get("desc"), 300);
-      const link = cleanLink(form.get("link"));
-      if (!title || !desc) return json({ error: "الاسم والوصف مطلوبين" }, 400);
+      const built = col.build(form);
+      if (built.error) return json({ error: built.error }, 400);
 
       const id = crypto.randomUUID();
       let image = "";
@@ -142,19 +167,21 @@ export default {
         image = `/api/img/${id}`;
       }
 
-      const projects = (await loadProjects(env)) || [];
-      projects.unshift({ id, title, desc, link, image });
-      await env.DATA.put("projects", JSON.stringify(projects));
-      return json({ ok: true, projects });
+      const list = (await loadList(env, name)) || [];
+      const item = { id, ...built.item, [col.imageField]: image };
+      if (col.addToStart) list.unshift(item);
+      else list.push(item);
+      await env.DATA.put(name, JSON.stringify(list));
+      return json({ ok: true, [name]: list });
     }
 
-    const delMatch = pathname.match(/^\/api\/projects\/([a-f0-9-]{36})$/);
+    const delMatch = pathname.match(/^\/api\/(projects|team)\/([a-f0-9-]{36})$/);
     if (delMatch && method === "DELETE") {
-      const id = delMatch[1];
-      const projects = ((await loadProjects(env)) || []).filter((p) => p.id !== id);
-      await env.DATA.put("projects", JSON.stringify(projects));
+      const [, name, id] = delMatch;
+      const list = ((await loadList(env, name)) || []).filter((x) => x.id !== id);
+      await env.DATA.put(name, JSON.stringify(list));
       await env.DATA.delete("img:" + id);
-      return json({ ok: true, projects });
+      return json({ ok: true, [name]: list });
     }
 
     return json({ error: "not found" }, 404);
