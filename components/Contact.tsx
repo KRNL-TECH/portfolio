@@ -29,13 +29,13 @@ return ( <section id="contact" className="px-6 py-20 max-w-2xl mx-auto"> <h2 cla
 
   <p className="mt-6 text-white/70">
     أو راسلنا على{" "}
-    <a className="text-accent" href={"krnl.tech@outlook.com:" + EMAIL}>
+    <a className="text-accent" href={"mailto:krnl.tech@outlook.com" + EMAIL}>
       {EMAIL}
     </a>
   </p>
 
   <a
-    href={"https://wa.me/01284755700" +  PHONE}
+    href={"https://wa.me/01284755700" + PHONE}
     target="_blank"
     className="fixed bottom-5 left-5 z-50 rounded-full bg-green-500 px-5 py-3 font-semibold shadow-lg"
   >
