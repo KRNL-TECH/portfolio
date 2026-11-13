@@ -37,7 +37,7 @@ export default function About() {
                 className="mx-auto mb-4 h-28 w-28 rounded-full object-cover ring-2 ring-accent/40"
               />
             ) : (
-              <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-3xl font-bold">
+              <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-3xl font-bold">
                 {m.name.trim().charAt(0)}
               </div>
             )}

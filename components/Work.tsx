@@ -29,7 +29,7 @@ export default function Work() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.image} alt={p.title} className="h-40 w-full object-cover" />
               ) : (
-                <div className="h-40 bg-gradient-to-br from-primary to-accent" />
+                <div className="h-40 bg-linear-to-br from-primary to-accent" />
               )}
               <div className="p-5">
                 <h3 className="text-lg font-semibold mb-1">{p.title}</h3>

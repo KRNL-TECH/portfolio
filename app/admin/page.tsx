@@ -218,7 +218,7 @@ export default function AdminPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.photo} alt="" className="h-14 w-14 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-bold">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent font-bold">
                     {m.name.trim().charAt(0)}
                   </div>
                 )}
@@ -235,7 +235,7 @@ export default function AdminPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.image} alt="" className="h-14 w-20 rounded-lg object-cover" />
                 ) : (
-                  <div className="h-14 w-20 rounded-lg bg-gradient-to-br from-primary to-accent" />
+                  <div className="h-14 w-20 rounded-lg bg-linear-to-br from-primary to-accent" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{p.title}</p>
