@@ -1,45 +1,60 @@
-"use client"; import { useState, type FormEvent } from "react";
-const PHONE = "01284755700"; const EMAIL = "krnl.tech@outlook.com";
-export default function Contact() { const [name, setName] = useState(""); const [msg, setMsg] = useState("");
-const send = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const text = encodeURIComponent("أنا " + name + "\n" + msg); window.open("https://wa.me/" + PHONE + "?text=" + text, "_blank"); };
-return ( <section id="contact" className="px-6 py-20 max-w-2xl mx-auto"> <h2 className="text-3xl font-bold mb-6 text-accent">تواصل معانا</h2>
-  <form onSubmit={send} className="space-y-4">
-    <input
-      required
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-      placeholder="اسمك"
-      className="w-full rounded-xl bg-white/5 border border-white/10 p-3 outline-none"
-    />
-    <textarea
-      required
-      value={msg}
-      onChange={(e) => setMsg(e.target.value)}
-      placeholder="احكيلنا عن مشروعك"
-      rows={4}
-      className="w-full rounded-xl bg-white/5 border border-white/10 p-3 outline-none"
-    />
-    <button
-      type="submit"
-      className="w-full rounded-xl bg-primary py-3 font-semibold"
-    >
-      ابعت على واتساب
-    </button>
-  </form>
+"use client";
 
-  <p className="mt-6 text-white/70">
-    أو راسلنا على{" "}
-    <a className="text-accent" href={"mailto:" + EMAIL}>
-      {EMAIL}
-    </a>
-  </p>
+import { useState, type FormEvent } from "react";
+import { EMAIL, WA_LINK } from "@/lib/contact";
+import Reveal from "./Reveal";
 
-  <a
-    href={"https://wa.me/" + PHONE}
-    target="_blank"
-    className="fixed bottom-5 left-5 z-50 rounded-full bg-green-500 px-5 py-3 font-semibold shadow-lg"
-  >
-    واتساب
-  </a>
-</section>
-); }
+export default function Contact() {
+  const [name, setName] = useState("");
+  const [msg, setMsg] = useState("");
+
+  const send = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const text = encodeURIComponent("Hi, I'm " + name + "\n" + msg);
+    window.open(WA_LINK + "?text=" + text, "_blank");
+  };
+
+  const field =
+    "w-full rounded-xl border border-line bg-white p-3 text-navy outline-none transition placeholder:text-muted/60 focus:border-cyan focus:ring-4 focus:ring-cyan/15";
+
+  return (
+    <>
+      <section id="contact" className="mx-auto max-w-2xl px-6 py-20">
+        <Reveal>
+          <h2 className="text-3xl font-extrabold text-navy">Contact Us</h2>
+          <span className="mt-3 mb-6 block h-1 w-12 rounded bg-cyan" />
+          <form onSubmit={send} className="space-y-4">
+            <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={field} />
+            <textarea
+              required
+              value={msg}
+              onChange={(e) => setMsg(e.target.value)}
+              placeholder="Tell us about your project"
+              rows={4}
+              className={field}
+            />
+            <button type="submit" className="w-full rounded-xl bg-navy py-3 font-semibold text-white shadow-lg shadow-navy/20 transition hover:-translate-y-0.5 hover:bg-navy/90">
+              Send on WhatsApp
+            </button>
+          </form>
+
+          <p className="mt-6 text-muted">
+            Or email us at{" "}
+            <a className="font-semibold text-cyan-dark" href={"mailto:" + EMAIL}>
+              {EMAIL}
+            </a>
+          </p>
+        </Reveal>
+      </section>
+
+      <a
+        href={WA_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pulse-ring fixed bottom-5 right-5 z-50 rounded-full bg-green-500 px-5 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
+      >
+        WhatsApp
+      </a>
+    </>
+  );
+}

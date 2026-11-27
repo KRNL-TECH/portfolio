@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-type Project = { id: string; title: string; desc: string; image?: string; link?: string };
+type Project = { id: string; title: string; desc: string; category?: string; image?: string; link?: string };
 type Member = { id: string; name: string; role: string; photo?: string };
 type Status = "checking" | "out" | "in";
-type Tab = "projects" | "team";
+type Service = { id: string; title: string; desc: string };
+type Tab = "projects" | "team" | "services";
 
 async function shrink(file: File, square = false): Promise<Blob> {
   const bmp = await createImageBitmap(file);
@@ -35,6 +36,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("projects");
   const [projects, setProjects] = useState<Project[]>([]);
   const [team, setTeam] = useState<Member[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -42,9 +44,10 @@ export default function AdminPage() {
   const [formKey, setFormKey] = useState(0);
 
   async function loadAll() {
-    const [p, t] = await Promise.all([fetch("/api/projects"), fetch("/api/team")]);
+    const [p, t, sv] = await Promise.all([fetch("/api/projects"), fetch("/api/team"), fetch("/api/services")]);
     setProjects((await p.json()).projects || []);
     setTeam((await t.json()).team || []);
+    setServices((await sv.json()).services || []);
   }
 
   useEffect(() => {
@@ -58,6 +61,14 @@ export default function AdminPage() {
       })
       .catch(() => setStatus("out"));
   }, []);
+
+  function applyList(d: { projects?: Project[]; team?: Member[]; services?: Service[] }) {
+    if (tab === "projects") setProjects(d.projects || []);
+    else if (tab === "team") setTeam(d.team || []);
+    else setServices(d.services || []);
+  }
+
+  const labelOf = (id?: string) => services.find((x) => x.id === id)?.title ?? "";
 
   function switchTab(t: Tab) {
     setTab(t);
@@ -102,8 +113,7 @@ export default function AdminPage() {
       const r = await fetch(`/api/${tab}`, { method: "POST", body: fd });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || "حصل خطأ");
-      if (tab === "projects") setProjects(d.projects);
-      else setTeam(d.team);
+      applyList(d);
       setFile(null);
       setFormKey((k) => k + 1);
       setMsg("✓ اتضاف");
@@ -113,14 +123,26 @@ export default function AdminPage() {
       setBusy(false);
     }
   }
-
+async function editService(sv: Service) {
+  const title = prompt("اسم الخدمة", sv.title);
+  if (title === null) return;
+  const desc = prompt("وصف الخدمة", sv.desc);
+  if (desc === null) return;
+  const r = await fetch(`/api/services/${sv.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, desc }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) return setMsg(d.error || "حصل خطأ");
+  setServices(d.services || []);
+}
   async function remove(id: string, label: string) {
     if (!confirm(`مسح "${label}"؟`)) return;
     const r = await fetch(`/api/${tab}/${id}`, { method: "DELETE" });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) return setMsg(d.error || "حصل خطأ");
-    if (tab === "projects") setProjects(d.projects);
-    else setTeam(d.team);
+    applyList(d);
   }
 
   if (status === "checking") return <main className="p-10 text-center text-white/60">...</main>;
@@ -146,6 +168,7 @@ export default function AdminPage() {
   }
 
   const isTeam = tab === "team";
+  const isServices = tab === "services";
   const tabBtn = (t: Tab, label: string) => (
     <button
       onClick={() => switchTab(t)}
@@ -170,24 +193,36 @@ export default function AdminPage() {
 
       <div className="mb-8 flex gap-2">
         {tabBtn("projects", "الأعمال")}
+        {tabBtn("services", "الخدمات")}
         {tabBtn("team", "التيم (من نحن)")}
       </div>
 
       <form key={formKey} onSubmit={add} className="mb-10 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 className="font-semibold">{isTeam ? "إضافة عضو" : "إضافة مشروع"}</h2>
+        <h2 className="font-semibold">{isTeam ? "إضافة عضو" : isServices ? "إضافة خدمة" : "إضافة مشروع"}</h2>
         {isTeam ? (
           <>
             <input name="name" className={input} placeholder="الاسم" maxLength={60} required />
             <input name="role" className={input} placeholder="التخصص (مثلاً Frontend / UI)" maxLength={80} required />
           </>
+        ) : isServices ? (
+          <>
+            <input name="title" className={input} placeholder="اسم الخدمة (مثلاً: تصوير منتجات)" maxLength={60} required />
+            <textarea name="desc" className={input} placeholder="وصف قصير للخدمة" maxLength={200} rows={3} required />
+          </>
         ) : (
           <>
+            <select name="category" className={input} defaultValue="" required>
+              <option value="" disabled>القسم</option>
+              {services.map((c) => (
+                <option key={c.id} value={c.id} className="text-black">{c.title}</option>
+              ))}
+            </select>
             <input name="title" className={input} placeholder="اسم المشروع" maxLength={80} required />
             <textarea name="desc" className={input} placeholder="وصف قصير" maxLength={300} rows={3} required />
             <input name="link" className={input} placeholder="لينك المشروع (اختياري) https://..." dir="ltr" />
           </>
         )}
-        <div>
+        {!isServices && <div>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
@@ -197,21 +232,32 @@ export default function AdminPage() {
           <p className="mt-1 text-xs text-white/40">
             {isTeam ? "الصورة بتتقص مربعة وتتصغّر تلقائياً (اختيارية)." : "الصورة بتتصغّر تلقائياً قبل الرفع (اختيارية)."}
           </p>
-        </div>
+        </div>}
         <button className={button} disabled={busy}>{busy ? "جاري الإضافة..." : "إضافة"}</button>
         {msg && <p className={"text-sm " + (msg.startsWith("✓") ? "text-accent" : "text-red-400")}>{msg}</p>}
       </form>
 
       <h2 className="mb-4 font-semibold">
-        {isTeam ? `أعضاء التيم (${team.length})` : `المشاريع الحالية (${projects.length})`}
+        {isTeam ? `أعضاء التيم (${team.length})` : isServices ? `الخدمات (${services.length})` : `المشاريع الحالية (${projects.length})`}
       </h2>
-      {(isTeam ? team : projects).length === 0 && (
+      {(isTeam ? team : isServices ? services : projects).length === 0 && (
         <p className="text-sm text-white/50">
           لسه مفيش حاجة محفوظة. الموقع بيعرض بيانات تجريبية لحد ما تضيف أول عنصر.
         </p>
       )}
       <ul className="space-y-3">
-        {isTeam
+        {isServices
+          ? services.map((sv) => (
+              <li key={sv.id} className="flex items-center gap-4 rounded-xl border border-white/10 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{sv.title}</p>
+                  <p className="truncate text-sm text-white/50">{sv.desc}</p>
+                </div>
+                <button onClick={() => editService(sv)} className="text-sm text-accent hover:opacity-80">تعديل</button>
+                <button onClick={() => remove(sv.id, sv.title)} className="text-sm text-red-400 hover:text-red-300">مسح</button>
+              </li>
+            ))
+          : isTeam
           ? team.map((m) => (
               <li key={m.id} className="flex items-center gap-4 rounded-xl border border-white/10 p-3">
                 {m.photo ? (
@@ -239,7 +285,9 @@ export default function AdminPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{p.title}</p>
-                  <p className="truncate text-sm text-white/50">{p.desc}</p>
+                  <p className="truncate text-sm text-white/50">
+                    {labelOf(p.category) ? `${labelOf(p.category)} · ` : ""}{p.desc}
+                  </p>
                 </div>
                 <button onClick={() => remove(p.id, p.title)} className="text-sm text-red-400 hover:text-red-300">مسح</button>
               </li>

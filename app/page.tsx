@@ -3,7 +3,8 @@ import Services from "@/components/Services";
 import Work from "@/components/Work";
 import About from "@/components/About";
 import Contact from "@/components/Contact";
-import Navbar from "@/components//Navbar";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
@@ -13,7 +14,8 @@ export default function Home() {
       <Work />
       <About />
       <Contact />
-       <Navbar />
+      <Footer />
+      <Navbar />
     </main>
   );
 }

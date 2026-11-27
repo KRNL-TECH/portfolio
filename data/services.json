@@ -1,0 +1,6 @@
+[
+  { "id": "branding", "title": "Visual Identity", "desc": "Logos, color systems, typography and graphic design that make your brand distinctive and instantly recognizable." },
+  { "id": "web", "title": "Websites", "desc": "Fast, responsive websites and landing pages that look great on every screen." },
+  { "id": "app", "title": "Mobile Apps", "desc": "Android and iOS apps built for speed and quality." },
+  { "id": "social", "title": "Social Media Management", "desc": "Content planning, design, publishing, ad campaigns and performance reports." }
+]
