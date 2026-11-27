@@ -64,7 +64,20 @@ function cleanLink(v) {
     return "";
   }
 }
-
+const DEFAULT_SERVICES = [
+  { id: "branding", title: "Visual Identity", desc: "Logos, color systems, typography and graphic design that make your brand distinctive and instantly recognizable." },
+  { id: "web", title: "Websites", desc: "Fast, responsive websites and landing pages that look great on every screen." },
+  { id: "app", title: "Mobile Apps", desc: "Android and iOS apps built for speed and quality." },
+  { id: "social", title: "Social Media Management", desc: "Content planning, design, publishing, ad campaigns and performance reports." },
+];
+async function loadServices(env) {
+  let list = await loadList(env, "services");
+  if (!list) {
+    list = DEFAULT_SERVICES;
+    await env.DATA.put("services", JSON.stringify(list));
+  }
+  return list;
+}
 // المجموعات اللي الأدمن بيديرها: projects (الأعمال) و team (من نحن)
 const COLLECTIONS = {
   projects: {
@@ -77,14 +90,23 @@ const COLLECTIONS = {
       return { item: { title, desc, link: cleanLink(form.get("link")) } };
     },
   },
+  services: {
+  imageField: null,
+  addToStart: false,
+  build(form) {
+    const title = cleanText(form.get("title"), 60);
+    const desc = cleanText(form.get("desc"), 200);
+    if (!title || !desc) return { error: "اسم الخدمة والوصف مطلوبين" };
+    return { item: { title, desc } };
+  },
+},
   team: {
     imageField: "photo",
     addToStart: false,
     build(form) {
-      const name = cleanText(form.get("name"), 60);
-      const role = cleanText(form.get("role"), 80);
-      if (!name || !role) return { error: "الاسم والتخصص مطلوبين" };
-      return { item: { name, role } };
+     const category = cleanText(form.get("category"), 40);
+if (!title || !desc) return { error: "الاسم والوصف مطلوبين" };
+if (!category) return { error: "اختار القسم" };
     },
   },
 };
@@ -104,9 +126,9 @@ export default {
     }
 
     // ---------- عام ----------
-    const listMatch = pathname.match(/^\/api\/(projects|team)$/);
+    const listMatch = pathname.match(/^\/api\/(projects|team|services)$/);
     if (listMatch && method === "GET") {
-      return json({ [listMatch[1]]: await loadList(env, listMatch[1]) });
+     if (listMatch[1] === "services") return json({ services: await loadServices(env) });
     }
 
     const imgMatch = pathname.match(/^\/api\/img\/([a-f0-9-]{36})$/);
@@ -148,7 +170,22 @@ export default {
     if (!(await isAdmin(request, env))) return json({ error: "unauthorized" }, 401);
 
     if (pathname === "/api/me" && method === "GET") return json({ ok: true });
-
+// تعديل اسم/وصف خدمة
+const putMatch = pathname.match(/^\/api\/services\/([A-Za-z0-9-]{1,40})$/);
+if (putMatch && method === "PUT") {
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const title = cleanText(body.title, 60);
+  const desc = cleanText(body.desc, 200);
+  if (!title || !desc) return json({ error: "اسم الخدمة والوصف مطلوبين" }, 400);
+  const list = await loadServices(env);
+  const item = list.find((x) => x.id === putMatch[1]);
+  if (!item) return json({ error: "not found" }, 404);
+  item.title = title;
+  item.desc = desc;
+  await env.DATA.put("services", JSON.stringify(list));
+  return json({ ok: true, services: list });
+}
     if (listMatch && method === "POST") {
       const name = listMatch[1];
       const col = COLLECTIONS[name];
@@ -156,10 +193,14 @@ export default {
       try { form = await request.formData(); } catch { return json({ error: "بيانات غير صالحة" }, 400); }
       const built = col.build(form);
       if (built.error) return json({ error: built.error }, 400);
+      if (name === "projects") {
+  const services = await loadServices(env);
+  if (!services.some((x) => x.id === built.item.category)) return json({ error: "القسم غير موجود" }, 400);
+}
 
       const id = crypto.randomUUID();
       let image = "";
-      const file = form.get("image");
+      const file = col.imageField ? form.get("image") : null;
       if (file && typeof file !== "string" && file.size > 0) {
         if (!IMAGE_TYPES.includes(file.type)) return json({ error: "نوع الصورة غير مدعوم (JPG/PNG/WebP/GIF)" }, 400);
         if (file.size > MAX_IMAGE_BYTES) return json({ error: "الصورة أكبر من 2MB" }, 400);
@@ -167,18 +208,18 @@ export default {
         image = `/api/img/${id}`;
       }
 
-      const list = (await loadList(env, name)) || [];
-      const item = { id, ...built.item, [col.imageField]: image };
+     const list = name === "services" ? await loadServices(env) : (await loadList(env, name)) || [];
+     const item = { id, ...built.item, ...(col.imageField ? { [col.imageField]: image } : {}) };
       if (col.addToStart) list.unshift(item);
       else list.push(item);
       await env.DATA.put(name, JSON.stringify(list));
       return json({ ok: true, [name]: list });
     }
 
-    const delMatch = pathname.match(/^\/api\/(projects|team)\/([a-f0-9-]{36})$/);
+    const delMatch = pathname.match(/^\/api\/(projects|team|services)\/([A-Za-z0-9-]{1,40})$/);
     if (delMatch && method === "DELETE") {
-      const [, name, id] = delMatch;
-      const list = ((await loadList(env, name)) || []).filter((x) => x.id !== id);
+      const current = name === "services" ? await loadServices(env) : (await loadList(env, name)) || [];
+const list = current.filter((x) => x.id !== id);
       await env.DATA.put(name, JSON.stringify(list));
       await env.DATA.delete("img:" + id);
       return json({ ok: true, [name]: list });

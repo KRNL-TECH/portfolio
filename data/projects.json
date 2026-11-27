@@ -1,5 +1,6 @@
 [
-  { "title": "نظام حجز للعيادات", "desc": "حجز مواعيد أونلاين مع لوحة تحكم.", "image": "", "link": "" },
-  { "title": "منيو إلكتروني", "desc": "منيو وطلبات لمطعم عن طريق QR.", "image": "", "link": "" },
-  { "title": "موقع شركة", "desc": "موقع تعريفي سريع ومتجاوب.", "image": "", "link": "" }
+  { "title": "Restaurant Brand Identity", "category": "branding", "desc": "Logo, color palette, print materials and social media templates.", "image": "", "link": "" },
+  { "title": "Corporate Website", "category": "web", "desc": "A fast, responsive company website that works on every screen.", "image": "", "link": "" },
+  { "title": "Appointment Booking App", "category": "app", "desc": "Android and iOS app with an admin dashboard.", "image": "", "link": "" },
+  { "title": "Brand Social Media Management", "category": "social", "desc": "Content plan, design, publishing and ad campaigns.", "image": "", "link": "" }
 ]

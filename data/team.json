@@ -1,5 +1,5 @@
 [
-  { "name": "الاسم الأول", "role": "Frontend / UI", "photo": "" },
-  { "name": "الاسم التاني", "role": "Backend / Content", "photo": "" },
-  { "name": "الاسم التالت", "role": "Deployment / QA", "photo": "" }
+  { "name": "Team Member 1", "role": "Graphic / UI", "photo": "" },
+  { "name": "Team Member 2", "role": "Development / Content", "photo": "" },
+  { "name": "Team Member 3", "role": "Social Media / QA", "photo": "" }
 ]

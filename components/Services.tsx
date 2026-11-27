@@ -1,20 +1,30 @@
-const services = [
-  { title: "تطبيقات موبايل", desc: "تطبيقات Android وiOS بـ Flutter بسرعة وجودة عالية." },
-  { title: "مواقع ويب", desc: "مواقع وصفحات هبوط سريعة ومتجاوبة مع كل الشاشات." },
-  { title: "لوحات تحكم", desc: "أنظمة إدارة وحجوزات تريّح صاحب النشاط." },
-];
+"use client";
+
+import { useServices } from "@/lib/useServices";
+import Reveal from "./Reveal";
+import SpotlightCard from "./SpotlightCard";
 
 export default function Services() {
+  const services = useServices();
+
   return (
-    <section id="services" className="px-6 py-20 max-w-5xl mx-auto">
-      <h2 className="text-3xl font-bold mb-10 text-accent">خدماتنا</h2>
-      <div className="grid gap-6 md:grid-cols-3">
-        {services.map((s) => (
-          <div key={s.title} className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-xl font-semibold mb-2">{s.title}</h3>
-            <p className="text-white/70">{s.desc}</p>
-          </div>
-        ))}
+    <section id="services" className="bg-mist">
+      <div className="mx-auto max-w-5xl px-6 py-20">
+        <Reveal>
+          <h2 className="text-3xl font-extrabold text-navy">Our Services</h2>
+          <span className="mt-3 mb-10 block h-1 w-12 rounded bg-cyan" />
+        </Reveal>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {services.map((s, i) => (
+            <Reveal key={s.id} delay={i * 100} className="h-full">
+              <SpotlightCard className="h-full rounded-2xl border border-line bg-white p-6 shadow-sm">
+                <span className="mb-4 block text-sm font-bold text-cyan-dark">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="mb-2 text-xl font-bold text-navy">{s.title}</h3>
+                <p className="text-muted">{s.desc}</p>
+              </SpotlightCard>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );
