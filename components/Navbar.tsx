@@ -13,6 +13,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [active, setActive] = useState("");
+  const [open, setOpen] = useState(false); // mobile menu
 
   // scroll progress bar + navbar style after scrolling
   useEffect(() => {
@@ -44,20 +45,24 @@ export default function Navbar() {
     return () => io.disconnect();
   }, []);
 
+  const solid = scrolled || open;
+
   return (
     <nav
       className={
         "fixed top-0 z-50 w-full border-b backdrop-blur transition-all duration-300 " +
-        (scrolled ? "border-line bg-white/95 shadow-md shadow-navy/5" : "border-transparent bg-white/50")
+        (solid ? "border-line bg-white/95 shadow-md shadow-navy/5" : "border-transparent bg-white/50")
       }
     >
       <div className={"mx-auto flex max-w-5xl items-center justify-between px-6 transition-all duration-300 " + (scrolled ? "py-2" : "py-4")}>
-        <a href="#hero" className="flex items-center gap-2 text-xl font-extrabold text-navy">
+        <a href="#hero" onClick={() => setOpen(false)} className="flex items-center gap-2 text-xl font-extrabold text-navy">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" width={32} height={32} className="h-8 w-8" />
           Kernix
         </a>
-        <ul className="flex gap-5 text-sm font-medium">
+
+        {/* desktop links */}
+        <ul className="hidden gap-6 text-sm font-medium md:flex">
           {links.map((l) => (
             <li key={l.id}>
               <a
@@ -72,7 +77,41 @@ export default function Navbar() {
             </li>
           ))}
         </ul>
+
+        {/* mobile menu button */}
+        <button
+          type="button"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-lg transition hover:bg-navy/5 md:hidden"
+        >
+          <span className={"block h-0.5 w-6 rounded bg-navy transition duration-300 " + (open ? "translate-y-2 rotate-45" : "")} />
+          <span className={"block h-0.5 w-6 rounded bg-navy transition duration-300 " + (open ? "opacity-0" : "")} />
+          <span className={"block h-0.5 w-6 rounded bg-navy transition duration-300 " + (open ? "-translate-y-2 -rotate-45" : "")} />
+        </button>
       </div>
+
+      {/* mobile dropdown */}
+      <div className={"overflow-hidden transition-all duration-300 md:hidden " + (open ? "max-h-80 border-t border-line" : "max-h-0")}>
+        <ul className="flex flex-col px-6 py-2">
+          {links.map((l) => (
+            <li key={l.id}>
+              <a
+                href={"#" + l.id}
+                onClick={() => setOpen(false)}
+                className={
+                  "block border-l-4 py-3 pl-4 text-base font-medium transition " +
+                  (active === l.id ? "border-cyan text-navy" : "border-transparent text-muted hover:text-navy")
+                }
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div aria-hidden className="absolute bottom-0 left-0 h-0.5 bg-cyan transition-[width] duration-150" style={{ width: `${progress}%` }} />
     </nav>
   );

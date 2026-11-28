@@ -111,8 +111,10 @@ export default function AdminPage() {
       fd.delete("image");
       if (file) fd.set("image", await shrink(file, tab === "team"), "photo.jpg");
       const r = await fetch(`/api/${tab}`, { method: "POST", body: fd });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "حصل خطأ");
+      const text = await r.text();
+      let d: { error?: string; projects?: Project[]; team?: Member[]; services?: Service[] } = {};
+      try { d = JSON.parse(text); } catch {}
+      if (!r.ok) throw new Error(d.error || `خطأ ${r.status}: ${text.slice(0, 120)}`);
       applyList(d);
       setFile(null);
       setFormKey((k) => k + 1);
@@ -123,25 +125,29 @@ export default function AdminPage() {
       setBusy(false);
     }
   }
-async function editService(sv: Service) {
-  const title = prompt("اسم الخدمة", sv.title);
-  if (title === null) return;
-  const desc = prompt("وصف الخدمة", sv.desc);
-  if (desc === null) return;
-  const r = await fetch(`/api/services/${sv.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, desc }),
-  });
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) return setMsg(d.error || "حصل خطأ");
-  setServices(d.services || []);
-}
+
+  async function editService(sv: Service) {
+    const title = prompt("اسم الخدمة", sv.title);
+    if (title === null) return;
+    const desc = prompt("وصف الخدمة", sv.desc);
+    if (desc === null) return;
+    const r = await fetch(`/api/services/${sv.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, desc }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return setMsg(d.error || "حصل خطأ");
+    setServices(d.services || []);
+  }
+
   async function remove(id: string, label: string) {
     if (!confirm(`مسح "${label}"؟`)) return;
     const r = await fetch(`/api/${tab}/${id}`, { method: "DELETE" });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) return setMsg(d.error || "حصل خطأ");
+    const text = await r.text();
+    let d: { error?: string; projects?: Project[]; team?: Member[]; services?: Service[] } = {};
+    try { d = JSON.parse(text); } catch {}
+    if (!r.ok) return setMsg(d.error || `خطأ ${r.status}: ${text.slice(0, 120)}`);
     applyList(d);
   }
 
